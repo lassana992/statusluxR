@@ -1,0 +1,23 @@
+Package: statusluxR
+Title: StatusLuxR: A Statistical Analysis Toolkit for Descriptive and Grouped Data
+Version: 0.1.0
+Authors@R: 
+    c(
+      person("Lassana", "Hena",
+             email = "henalassana93@gmail.com",
+             role = c("aut", "cre")),
+      person("Abu", "Caulker", role = "aut"),
+      person("J", "Dearlorkia B. Maoyah", role = "aut")
+    )
+Description: A comprehensive R package for statistical analysis including
+    descriptive statistics, grouped frequency distribution, categorical data
+    analysis, and data visualization tools for students and researchers.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 8.0.0
+Depends: 
+    R (>= 3.5)
+LazyData: true
+Imports: 
+    ggplot2
