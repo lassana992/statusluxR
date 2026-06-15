@@ -2,19 +2,39 @@
 % Please edit documentation in R/plots.R
 \name{group_histogram}
 \alias{group_histogram}
-\title{Grouped Histogram}
+\title{Advanced Grouped Histogram}
 \usage{
-group_histogram(x, width = NULL)
+group_histogram(
+  x,
+  rule = "Sturges",
+  width = NULL,
+  title = "Grouped Histogram",
+  xlab = "Class Intervals",
+  ylab = "Frequency",
+  fill_color = "#2980B9",
+  border_color = "white"
+)
 }
 \arguments{
-\item{x}{numeric vector (raw data)}
+\item{x}{numeric vector}
 
-\item{width}{optional interval width}
+\item{rule}{string: "Sturges", "Scott", "FD", or "Custom"}
+
+\item{width}{custom interval width (if rule="Custom")}
+
+\item{title}{custom plot title}
+
+\item{xlab}{custom x-axis label}
+
+\item{ylab}{custom y-axis label}
+
+\item{fill_color}{custom fill color}
+
+\item{border_color}{custom border color}
 }
 \value{
 A ggplot object
 }
 \description{
-Creates a modern histogram from grouped data. Bars touch directly
-to accurately represent continuous class intervals.
+Advanced Grouped Histogram
 }

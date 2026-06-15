@@ -2,16 +2,42 @@
 % Please edit documentation in R/plots.R
 \name{group_boxplot}
 \alias{group_boxplot}
-\title{Grouped Boxplot}
+\title{Advanced Boxplot (Single or Grouped)}
 \usage{
-group_boxplot(x)
+group_boxplot(
+  num_var,
+  cat_var = NULL,
+  title = "Boxplot",
+  xlab = "Group",
+  ylab = "Values",
+  fill_color = "#E67E22",
+  outlier_color = "#C0392B",
+  notches = FALSE,
+  orientation = "horizontal"
+)
 }
 \arguments{
-\item{x}{numeric vector}
+\item{num_var}{numeric variable}
+
+\item{cat_var}{optional categorical variable for grouping}
+
+\item{title}{custom title}
+
+\item{xlab}{custom x label}
+
+\item{ylab}{custom y label}
+
+\item{fill_color}{box fill color}
+
+\item{outlier_color}{color of outlier points}
+
+\item{notches}{boolean for confidence interval notches}
+
+\item{orientation}{"vertical" or "horizontal"}
 }
 \value{
 A ggplot object
 }
 \description{
-Creates a modern, horizontal boxplot for a numeric vector.
+Advanced Boxplot (Single or Grouped)
 }

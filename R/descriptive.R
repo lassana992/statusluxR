@@ -1,6 +1,10 @@
 #' Smart Helper: Ensure Grouped Data
+#'
 #' (Internal function, not exported)
 #' Checks if input is raw data or a table. Converts raw data to a table automatically.
+#'
+#' @param data The input numeric vector or frequency table to check.
+#' @return A validated frequency data frame.
 .ensure_grouped_df <- function(data) {
   if (is.numeric(data)) {
     # If raw data, convert using our previously built function
@@ -234,8 +238,9 @@ remove_grouped_outliers <- function(df) {
   # If table is empty or has no frequency, return as is
   if(length(approx_raw) == 0) return(df)
 
-  Q1 <- quantile(approx_raw, 0.25, names = FALSE)
-  Q3 <- quantile(approx_raw, 0.75, names = FALSE)
+  # FIXED: Added stats:: back to avoid global variable notes
+  Q1 <- stats::quantile(approx_raw, 0.25, names = FALSE)
+  Q3 <- stats::quantile(approx_raw, 0.75, names = FALSE)
   IQR_val <- Q3 - Q1
 
   lower_fence <- Q1 - 1.5 * IQR_val
@@ -257,4 +262,149 @@ remove_grouped_outliers <- function(df) {
   rownames(filtered_df) <- NULL
 
   return(filtered_df)
+}
+#' Data Cleansing and Diagnostic Summary
+#'
+#' Detects duplicates, removes them, and provides a missing value breakdown.
+#'
+#' @param df target dataframe
+#' @return A list containing the diagnostic summary and the cleaned dataframe
+#' @export
+data_diagnostics <- function(df) {
+  # 1. Duplicate Detection
+  duplicate_rows <- sum(duplicated(df))
+
+  # 2. Missing Value Summary (Column by Column)
+  missing_summary <- data.frame(
+    Variable = names(df),
+    Missing_Count = sapply(df, function(x) sum(is.na(x))),
+    Missing_Percentage = sapply(df, function(x) round((sum(is.na(x)) / nrow(df)) * 100, 2))
+  )
+  rownames(missing_summary) <- NULL
+
+  # 3. Clean the Data (Remove Exact Duplicates)
+  clean_df <- df[!duplicated(df), ]
+
+  list(
+    Total_Rows_Original = nrow(df),
+    Duplicates_Detected_And_Removed = duplicate_rows,
+    Missing_Values_Report = missing_summary,
+    Cleaned_Data = clean_df
+  )
+}
+
+
+
+#' Calculate a Weighted Mean
+#'
+#' Computes the weighted average of a numeric vector.
+#'
+#' @param x A numeric vector of values.
+#' @param w A numeric vector of weights, the same length as x.
+#' @param na.rm Logical. Should missing values be removed? Defaults to TRUE.
+#' @return A numeric value representing the weighted mean.
+#' @export
+calc_weighted_mean <- function(x, w, na.rm = TRUE) {
+  if (length(x) != length(w)) stop("Vectors 'x' and 'w' must be the same length.")
+
+  if (na.rm) {
+    valid_indices <- !is.na(x) & !is.na(w)
+    x <- x[valid_indices]
+    w <- w[valid_indices]
+  }
+
+  return(sum(x * w) / sum(w))
+}
+
+
+
+#' Calculate a Weighted Standard Deviation
+#'
+#' Computes the weighted standard deviation of a numeric vector.
+#'
+#' @param x A numeric vector of values.
+#' @param w A numeric vector of weights, the same length as x.
+#' @param na.rm Logical. Should missing values be removed? Defaults to TRUE.
+#' @return A numeric value representing the weighted standard deviation.
+#' @export
+calc_weighted_sd <- function(x, w, na.rm = TRUE) {
+  if (length(x) != length(w)) stop("Vectors 'x' and 'w' must be the same length.")
+
+  if (na.rm) {
+    valid_indices <- !is.na(x) & !is.na(w)
+    x <- x[valid_indices]
+    w <- w[valid_indices]
+  }
+
+  w_mean <- sum(x * w) / sum(w)
+
+  # Reliability weight correction for sample variance
+  variance <- sum(w * (x - w_mean)^2) /
+    (sum(w) - (sum(w^2) / sum(w)))
+
+  return(sqrt(variance))
+}
+
+
+
+#' Calculate Geometric Mean
+#'
+#' Computes the geometric mean of a numeric vector. Highly useful for rates of change.
+#'
+#' @param x A numeric vector. All values must be strictly positive.
+#' @param na.rm Logical. Should missing values be removed? Defaults to TRUE.
+#' @return A numeric value.
+#' @export
+calc_geometric_mean <- function(x, na.rm = TRUE) {
+  if (na.rm) x <- x[!is.na(x)]
+
+  if (any(x <= 0)) {
+    warning("Geometric mean requires strictly positive numbers. Non-positive values found.")
+    return(NaN)
+  }
+
+  # Calculated using log transformation to prevent arithmetic overflow on large datasets
+  return(exp(mean(log(x))))
+}
+
+
+
+#' Calculate Harmonic Mean
+#'
+#' Computes the harmonic mean of a numeric vector.
+#'
+#' @param x A numeric vector. All values must be strictly positive.
+#' @param na.rm Logical. Should missing values be removed? Defaults to TRUE.
+#' @return A numeric value.
+#' @export
+calc_harmonic_mean <- function(x, na.rm = TRUE) {
+  if (na.rm) x <- x[!is.na(x)]
+
+  if (any(x <= 0)) {
+    warning("Harmonic mean requires strictly positive numbers. Non-positive values found.")
+    return(NaN)
+  }
+
+  return(1 / mean(1 / x))
+}
+
+
+
+#' Calculate Trimmed Mean
+#'
+#' Computes the mean of a numeric vector after discarding a specified percentage
+#' of the highest and lowest values to reduce the effect of outliers.
+#'
+#' @param x A numeric vector.
+#' @param trim A fraction (0 to 0.5) of observations to be trimmed from each end. Defaults to 0.10 (10%).
+#' @param na.rm Logical. Should missing values be removed? Defaults to TRUE.
+#' @return A numeric value.
+#' @export
+calc_trimmed_mean <- function(x, trim = 0.10, na.rm = TRUE) {
+  if (trim < 0 || trim >= 0.5) {
+    stop("Trim fraction must be between 0 and 0.499.")
+  }
+
+  # Utilizes base R's internal trim logic for optimized speed
+  return(mean(x, trim = trim, na.rm = na.rm))
 }

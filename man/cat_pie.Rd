@@ -2,16 +2,30 @@
 % Please edit documentation in R/plots.R
 \name{cat_pie}
 \alias{cat_pie}
-\title{Pie Chart for Categorical Data}
+\title{Professional Pie Chart}
 \usage{
-cat_pie(x)
+cat_pie(
+  x,
+  title = "Categorical Pie Chart",
+  show_legend = TRUE,
+  label_pos = 0.5,
+  colors = NULL
+)
 }
 \arguments{
-\item{x}{categorical variable (vector)}
+\item{x}{categorical variable}
+
+\item{title}{custom title}
+
+\item{show_legend}{boolean to display legend}
+
+\item{label_pos}{multiplier for label position (0.5 is center)}
+
+\item{colors}{Optional vector of custom colors. Defaults to NULL (Viridis).}
 }
 \value{
 A ggplot object
 }
 \description{
-Pie Chart for Categorical Data
+Professional Pie Chart
 }

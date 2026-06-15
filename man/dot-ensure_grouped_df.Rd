@@ -2,14 +2,17 @@
 % Please edit documentation in R/descriptive.R
 \name{.ensure_grouped_df}
 \alias{.ensure_grouped_df}
-\title{Smart Helper: Ensure Grouped Data
-(Internal function, not exported)
-Checks if input is raw data or a table. Converts raw data to a table automatically.}
+\title{Smart Helper: Ensure Grouped Data}
 \usage{
 .ensure_grouped_df(data)
 }
+\arguments{
+\item{data}{The input numeric vector or frequency table to check.}
+}
+\value{
+A validated frequency data frame.
+}
 \description{
-Smart Helper: Ensure Grouped Data
 (Internal function, not exported)
 Checks if input is raw data or a table. Converts raw data to a table automatically.
 }

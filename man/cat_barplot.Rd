@@ -2,16 +2,33 @@
 % Please edit documentation in R/plots.R
 \name{cat_barplot}
 \alias{cat_barplot}
-\title{Bar Chart for Categorical Data}
+\title{Customizable Categorical Bar Chart}
 \usage{
-cat_barplot(x)
+cat_barplot(
+  x,
+  title = "Categorical Bar Chart",
+  xlab = "Categories",
+  ylab = "Count",
+  fill_color = "#34495E",
+  orientation = "vertical"
+)
 }
 \arguments{
-\item{x}{categorical variable (vector)}
+\item{x}{categorical variable}
+
+\item{title}{custom title}
+
+\item{xlab}{custom x label}
+
+\item{ylab}{custom y label}
+
+\item{fill_color}{custom fill color}
+
+\item{orientation}{"vertical" or "horizontal"}
 }
 \value{
 A ggplot object
 }
 \description{
-Bar Chart for Categorical Data
+Customizable Categorical Bar Chart
 }
