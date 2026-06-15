@@ -227,7 +227,6 @@ risk_summary <- function(var1, var2 = NULL, ref_row = 1, ref_col = 1) {
 
 
 
-
 #' Calculate Diagnostic Test Accuracy Metrics
 #'
 #' Computes Sensitivity, Specificity, Positive Predictive Value (PPV), and
