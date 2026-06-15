@@ -97,21 +97,17 @@ cat_describe <- function(x){
 #' @return A gtsummary object that renders as a formatted HTML/Word table
 #' @export
 cross_tabulate <- function(row_var, col_var, percent = "column") {
-  # 1. Capture the actual variable names passed into the function
-  # The regex sub(".*\\$", ...) ensures that if you pass 'my_data$Gender', it just keeps 'Gender'
   row_name <- sub(".*\\$", "", deparse(substitute(row_var)))
   col_name <- sub(".*\\$", "", deparse(substitute(col_var)))
 
-  # 2. Combine into a data frame using placeholder column names
   df <- data.frame(Row_Variable = row_var, Col_Variable = col_var)
 
-  # 3. Generate the table and apply the captured names as custom labels
   table <- gtsummary::tbl_cross(
     data = df,
     row = Row_Variable,
     col = Col_Variable,
     percent = percent,
-    label = list(Row_Variable ~ row_name, Col_Variable ~ col_name), # Injects real names here
+    label = list(Row_Variable ~ row_name, Col_Variable ~ col_name),
     margin = c("row", "column")
   ) |>
     gtsummary::bold_labels()
@@ -132,18 +128,15 @@ cross_tabulate <- function(row_var, col_var, percent = "column") {
 #' @export
 risk_summary <- function(var1, var2 = NULL, ref_row = 1, ref_col = 1) {
 
-  # Capture the variable names before R evaluates them
   var1_name <- sub(".*\\$", "", deparse(substitute(var1)))
   var2_name <- if(!missing(var2)) sub(".*\\$", "", deparse(substitute(var2))) else NULL
 
-  # 1. Auto-Tabulate: If the user passes two raw variables, make the table for them!
   if (!is.null(var2)) {
     data <- table(var1, var2)
     row_var_label <- var1_name
     col_var_label <- var2_name
   } else {
     data <- var1
-    # Try to extract names from the table dimensions if it's already a table
     dn <- names(dimnames(data))
     if (!is.null(dn) && length(dn) >= 2 && dn[1] != "" && dn[2] != "") {
       row_var_label <- dn[1]
@@ -154,7 +147,6 @@ risk_summary <- function(var1, var2 = NULL, ref_row = 1, ref_col = 1) {
     }
   }
 
-  # Input validation
   if (!is.matrix(data) && !is.table(data)) {
     stop("Input could not be converted to a table. Please provide two valid categorical variables.")
   }
@@ -166,7 +158,6 @@ risk_summary <- function(var1, var2 = NULL, ref_row = 1, ref_col = 1) {
     stop("Data must have at least two categories for both exposure and outcome.")
   }
 
-  # Extract names for clean output labels
   row_names <- rownames(data)
   if (is.null(row_names)) row_names <- paste0("Row_", 1:r)
   col_names <- colnames(data)
@@ -174,7 +165,6 @@ risk_summary <- function(var1, var2 = NULL, ref_row = 1, ref_col = 1) {
 
   results_list <- list()
 
-  # 2. Calculate OR and RR against the baseline
   for (i in 1:r) {
     if (i == ref_row) next
     for (j in 1:c) {
@@ -185,12 +175,10 @@ risk_summary <- function(var1, var2 = NULL, ref_row = 1, ref_col = 1) {
       c_val <- data[ref_row, j]
       d <- data[ref_row, ref_col]
 
-      # Continuity correction for zero-cells
       if (a == 0 || b == 0 || c_val == 0 || d == 0) {
         a <- a + 0.5; b <- b + 0.5; c_val <- c_val + 0.5; d <- d + 0.5
       }
 
-      # Relative Risk
       prob_exp <- a / (a + b)
       prob_unexp <- c_val / (c_val + d)
       rr <- prob_exp / prob_unexp
@@ -198,13 +186,11 @@ risk_summary <- function(var1, var2 = NULL, ref_row = 1, ref_col = 1) {
       rr_lower <- exp(log(rr) - 1.96 * se_log_rr)
       rr_upper <- exp(log(rr) + 1.96 * se_log_rr)
 
-      # Odds Ratio
       or <- (a * d) / (b * c_val)
       se_log_or <- sqrt((1/a) + (1/b) + (1/c_val) + (1/d))
       or_lower <- exp(log(or) - 1.96 * se_log_or)
       or_upper <- exp(log(or) + 1.96 * se_log_or)
 
-      # Dynamically build the comparison string with variable names
       comparison_name <- paste0(row_var_label, " (", row_names[i], " vs ", row_names[ref_row], ")",
                                 " | ", col_var_label, " (", col_names[j], ")")
 
@@ -239,11 +225,9 @@ risk_summary <- function(var1, var2 = NULL, ref_row = 1, ref_col = 1) {
 #' @export
 diagnostic_stats <- function(var1, var2 = NULL) {
 
-  # Capture names for professional output labeling
   var1_name <- sub(".*\\$", "", deparse(substitute(var1)))
   var2_name <- if(!missing(var2)) sub(".*\\$", "", deparse(substitute(var2))) else NULL
 
-  # 1. Auto-Tabulate if raw vectors are provided
   if (!is.null(var2)) {
     data <- table(var1, var2)
     test_label <- var1_name
@@ -255,7 +239,6 @@ diagnostic_stats <- function(var1, var2 = NULL) {
     gold_label <- if (!is.null(dn) && dn[2] != "") dn[2] else "Condition"
   }
 
-  # Validation
   if (!is.matrix(data) && !is.table(data)) {
     stop("Input must be a 2x2 matrix, table, or two raw categorical vectors.")
   }
@@ -263,25 +246,16 @@ diagnostic_stats <- function(var1, var2 = NULL) {
     stop("Diagnostic statistics require exactly a 2x2 table layout.")
   }
 
-  # Extract Confusion Matrix Cells
-  # Row 1 = Test Positive, Row 2 = Test Negative
-  # Col 1 = Disease Positive, Col 2 = Disease Negative
-  tp <- data[1, 1] # True Positives
-  fp <- data[1, 2] # False Positives
-  fn <- data[2, 1] # False Negatives
-  tn <- data[2, 2] # True Negatives
+  tp <- data[1, 1]
+  fp <- data[1, 2]
+  fn <- data[2, 1]
+  tn <- data[2, 2]
 
-  # 2. Calculate Exact Metrics and CIs using binom.test
-  # Sensitivity = TP / (TP + FN)
   sens_test <- binom.test(tp, tp + fn)
-  # Specificity = TN / (TN + FP)
   spec_test <- binom.test(tn, tn + fp)
-  # PPV = TP / (TP + FP)
   ppv_test  <- binom.test(tp, tp + fp)
-  # NPV = TN / (TN + FN)
   npv_test  <- binom.test(tn, tn + fn)
 
-  # 3. Build a beautiful results table
   metrics <- c("Sensitivity (True Positive Rate)",
                "Specificity (True Negative Rate)",
                "Positive Predictive Value (PPV)",
@@ -300,4 +274,88 @@ diagnostic_stats <- function(var1, var2 = NULL) {
   )
 
   return(results)
+}
+
+
+
+
+
+#' Generate a Professional Grouped Frequency Distribution Table
+#'
+#' @param data A data frame containing the dataset.
+#' @param num_var The numerical variable.
+#' @param cat_var The categorical variable.
+#' @param bins Integer. Number of bins.
+#' @param width Numeric. Exact class width.
+#'
+#' @return A list containing the clean data and the gt table.
+group_frequency_table <- function(data, num_var, cat_var, bins = 5, width = NULL) {
+
+  # 1. Capture variables and prepare data
+  num_var_str <- rlang::as_name(rlang::enquo(num_var))
+  cat_var_str <- rlang::as_name(rlang::enquo(cat_var))
+
+  num_vec <- data[[num_var_str]]
+  min_val <- floor(min(num_vec, na.rm = TRUE))
+  max_val <- ceiling(max(num_vec, na.rm = TRUE))
+
+  if (is.null(width)) {
+    width <- max(1, round((max_val - min_val) / bins))
+  }
+
+  start_val <- floor(min_val / width) * width
+  breaks <- seq(start_val, max_val + width, by = width)
+  lbls <- paste0(breaks[-length(breaks)], "-", breaks[-1] - 1)
+
+  # 2. Process data into long format
+  df_proc <- data |>
+    dplyr::mutate(
+      Interval = cut(.data[[num_var_str]], breaks = breaks, labels = lbls, right = FALSE, include.lowest = TRUE),
+      Category = as.factor(tidyr::replace_na(as.character(.data[[cat_var_str]]), "Missing"))
+    ) |>
+    dplyr::filter(!is.na(Interval)) |>
+    dplyr::group_by(Interval, Category) |>
+    dplyr::summarise(Frequency = dplyr::n(), .groups = "drop") |>
+    dplyr::group_by(Interval) |>
+    dplyr::mutate(
+      Relative_Frequency = Frequency / sum(Frequency),
+      Cumulative_Frequency = cumsum(Frequency)
+    ) |>
+    dplyr::ungroup()
+
+  # 3. Create professional gt table
+  # Using groupname_col handles the "overlapping" visual issue automatically
+  tbl <- gt::gt(df_proc, groupname_col = "Interval") |>
+    gt::tab_header(
+      title = gt::md(glue::glue("**Distribution of {num_var_str} by {cat_var_str}**")),
+      subtitle = glue::glue("Sample Size: {sum(df_proc$Frequency)}")
+    ) |>
+    gt::cols_label(
+      Frequency = "Freq",
+      Relative_Frequency = "Rel. Freq",
+      Cumulative_Frequency = "Cum. Freq"
+    ) |>
+    # Modern formatting (avoids deprecated 'formatter' warning)
+    gt::fmt_number(columns = "Relative_Frequency", decimals = 3) |>
+    gt::fmt_number(columns = c("Frequency", "Cumulative_Frequency"), decimals = 0) |>
+    # Add subtotals for each Interval
+    gt::summary_rows(
+      groups = TRUE,
+      columns = c("Frequency"),
+      fns = list(Subtotal = ~sum(., na.rm = TRUE)),
+      fmt = ~gt::fmt_number(., decimals = 0)
+    ) |>
+    # Styling for a professional look
+    gt::tab_style(
+      style = gt::cell_text(weight = "bold"),
+      locations = gt::cells_column_labels()
+    ) |>
+    gt::tab_options(
+      row_group.background.color = "#f4f4f4",
+      table.border.top.color = "black",
+      table.border.bottom.color = "black",
+      column_labels.border.bottom.color = "black"
+    )
+
+  return(list(data = df_proc, table = tbl))
 }

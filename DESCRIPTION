@@ -18,4 +18,11 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
 Depends: R (>= 4.1.0)
 LazyData: true
-Imports: ggplot2, gtsummary, stats
+Imports: 
+    dplyr,
+    ggplot2,
+    glue,
+    gt,
+    gtsummary,
+    stats,
+    tidyr
