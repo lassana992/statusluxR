@@ -7,19 +7,24 @@
 group_frequency_table(data, num_var, cat_var, bins = 5, width = NULL)
 }
 \arguments{
-\item{data}{A data frame containing the dataset.}
+\item{data}{A data frame.}
 
-\item{num_var}{The numerical variable.}
+\item{num_var}{A numerical variable.}
 
-\item{cat_var}{The categorical variable.}
+\item{cat_var}{A categorical variable.}
 
-\item{bins}{Integer. Number of bins.}
+\item{bins}{Number of classes.}
 
-\item{width}{Numeric. Exact class width.}
+\item{width}{Optional class width.}
 }
 \value{
-A list containing the clean data and the gt table.
+A list containing:
+\itemize{
+\item data: processed grouped data
+\item table: a gt table
+}
 }
 \description{
-Generate a Professional Grouped Frequency Distribution Table
+Creates a grouped frequency distribution table of a numerical variable
+stratified by a categorical variable.
 }

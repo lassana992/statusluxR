@@ -3,6 +3,7 @@
 #' @param x numeric vector
 #' @param rule string: "Sturges", "Scott", "FD", or "Custom"
 #' @param width custom interval width (if rule="Custom")
+#' @param type string: "exclusive" or "inclusive"
 #' @param title custom plot title
 #' @param xlab custom x-axis label
 #' @param ylab custom y-axis label
@@ -10,14 +11,15 @@
 #' @param border_color custom border color
 #' @return A ggplot object
 #' @export
-group_histogram <- function(x, rule = "Sturges", width = NULL,
+group_histogram <- function(x, rule = "Sturges", width = NULL, type = "exclusive",
                             title = "Grouped Histogram", xlab = "Class Intervals",
                             ylab = "Frequency", fill_color = "#2980B9", border_color = "white") {
 
-  # Explicit manual mathematical calculations for bin widths
+  # 1. Clean the data
   x_clean <- x[!is.na(x)]
   n <- length(x_clean)
 
+  # 2. Calculate mathematical width
   if (rule == "Sturges") {
     k <- ceiling(log2(n) + 1)
     width <- (max(x_clean) - min(x_clean)) / k
@@ -29,9 +31,38 @@ group_histogram <- function(x, rule = "Sturges", width = NULL,
     width <- (2 * iqr_val) / (n^(1/3))
   }
 
-  df <- group_exclusive_freq(x, width)
+  # 3. Force width to be an integer (minimum 1) to remove decimals
+  width <- round(width)
+  if(width < 1) width <- 1
 
-  ggplot2::ggplot(df, ggplot2::aes(x = Class, y = Frequency)) +
+  # 4. Create pure integer breaks
+  min_val <- floor(min(x_clean))
+  max_val <- ceiling(max(x_clean))
+  breaks <- seq(min_val, max_val + width, by = width)
+
+  # 5. Generate custom labels based on 'type' parameter
+  labels <- character(length(breaks) - 1)
+  for (i in 1:(length(breaks) - 1)) {
+    if (type == "inclusive") {
+      # Creates labels like: "37-42"
+      labels[i] <- paste0(breaks[i], "-", breaks[i+1] - 1)
+    } else {
+      # Creates labels like: "[37,43)"
+      labels[i] <- paste0("[", breaks[i], ",", breaks[i+1], ")")
+    }
+  }
+
+  # 6. Cut the data into groups directly inside the function
+  df <- data.frame(
+    Class = cut(x_clean, breaks = breaks, labels = labels, right = FALSE, include.lowest = TRUE)
+  )
+
+  # Summarize frequencies
+  df_freq <- as.data.frame(table(df$Class))
+  colnames(df_freq) <- c("Class", "Frequency")
+
+  # 7. Generate the Plot
+  ggplot2::ggplot(df_freq, ggplot2::aes(x = Class, y = Frequency)) +
     ggplot2::geom_col(fill = fill_color, color = border_color, width = 1) +
     ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.15))) +
     ggplot2::theme_minimal(base_size = 14) +
@@ -42,8 +73,6 @@ group_histogram <- function(x, rule = "Sturges", width = NULL,
       panel.grid.major.x = ggplot2::element_blank()
     )
 }
-
-
 
 #' Advanced Boxplot (Single or Grouped)
 #'

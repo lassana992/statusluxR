@@ -18,11 +18,16 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
 Depends: R (>= 4.1.0)
 LazyData: true
-Imports: 
+Imports:
     dplyr,
     ggplot2,
     glue,
     gt,
     gtsummary,
+    rlang,
+    rpivotTable,
+    shiny,
     stats,
     tidyr
+Suggests: 
+    writexl

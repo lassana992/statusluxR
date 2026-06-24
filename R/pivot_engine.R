@@ -1,0 +1,152 @@
+#' Advanced R Pivot Table Engine
+#'
+#' Dynamically aggregates, reshapes, and visualizes datasets in an Excel-style pivot format.
+#'
+#' @param data A data frame.
+#' @param rows Character vector. Columns to group by on the rows.
+#' @param cols Character vector. Columns to pivot across the top (optional).
+#' @param values Character vector. Numeric columns to aggregate.
+#' @param agg Character. Aggregation method: "sum", "mean", "median", "count", "min", "max", "sd", "var".
+#' @param na_rm Logical. Should NA values be removed before aggregation? Default TRUE.
+#' @param fill_value Numeric. Value to replace NAs with in the wide pivot format. Default 0.
+#' @param format Character. Output format: "wide" (Excel style), "long" (ggplot style), "plot" (auto-visualize), or "gt" (beautiful static table).
+#' @param plot_type Character. If format="plot", choose "bar", "line", or "heatmap".
+#' @param export_format Character. Optional export: "none", "csv", or "excel".
+#' @param file_name Character. Base file name for export.
+#'
+#' @return A data frame, tibble, ggplot object, or gt table depending on the format chosen.
+#' @export
+#' @import dplyr
+#' @import tidyr
+#' @import ggplot2
+#' @importFrom rlang syms sym
+#' @importFrom tools toTitleCase
+pivot_engine <- function(data,
+                         rows,
+                         cols = NULL,
+                         values,
+                         agg = c("sum", "mean", "median", "count", "min", "max", "sd", "var"),
+                         na_rm = TRUE,
+                         fill_value = 0,
+                         format = c("wide", "long", "plot", "gt"),
+                         plot_type = c("bar", "heatmap", "line"),
+                         export_format = c("none", "csv", "excel"),
+                         file_name = "pivot_summary") {
+
+  # Argument matching
+  agg <- match.arg(agg)
+  format <- match.arg(format)
+  plot_type <- match.arg(plot_type)
+  export_format <- match.arg(export_format)
+
+  # 1. Define Aggregation Logic
+  agg_funcs <- list(
+    "sum"    = function(x) sum(x, na.rm = na_rm),
+    "mean"   = function(x) mean(x, na.rm = na_rm),
+    "median" = function(x) median(x, na.rm = na_rm),
+    "count"  = function(x) sum(!is.na(x)),
+    "min"    = function(x) min(x, na.rm = na_rm),
+    "max"    = function(x) max(x, na.rm = na_rm),
+    "sd"     = function(x) sd(x, na.rm = na_rm),
+    "var"    = function(x) var(x, na.rm = na_rm)
+  )
+  selected_func <- agg_funcs[[agg]]
+
+  # 2. Base Grouping & Aggregation (Long Format)
+  group_cols <- c(rows, cols)
+
+  long_data <- data |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(group_cols))) |>
+    dplyr::summarise(
+      dplyr::across(dplyr::all_of(values), .fns = selected_func, .names = "{.col}"),
+      .groups = "drop"
+    )
+
+  # 3. Pivot to Wide Format (Excel Style)
+  if (!is.null(cols)) {
+    wide_data <- long_data |>
+      tidyr::pivot_wider(
+        names_from = dplyr::all_of(cols),
+        values_from = dplyr::all_of(values),
+        values_fill = fill_value
+      )
+  } else {
+    wide_data <- long_data
+  }
+
+  # 4. Handle Visualizations
+  if (format == "plot") {
+    plot_val <- values[1]
+    p <- ggplot2::ggplot(long_data, ggplot2::aes(x = factor(!!rlang::sym(rows[1]))))
+
+    if (plot_type == "bar") {
+      if (!is.null(cols)) {
+        p <- p + ggplot2::geom_col(ggplot2::aes(y = !!rlang::sym(plot_val), fill = factor(!!rlang::sym(cols[1]))),
+                                   position = "dodge", color = "black")
+      } else {
+        p <- p + ggplot2::geom_col(ggplot2::aes(y = !!rlang::sym(plot_val)), fill = "#2c3e50")
+      }
+    } else if (plot_type == "heatmap" && !is.null(cols)) {
+      p <- p + ggplot2::geom_tile(ggplot2::aes(y = factor(!!rlang::sym(cols[1])), fill = !!rlang::sym(plot_val)), color = "white") +
+        ggplot2::scale_fill_viridis_c(option = "plasma")
+    } else if (plot_type == "line") {
+      if (!is.null(cols)) {
+        p <- p + ggplot2::geom_line(ggplot2::aes(y = !!rlang::sym(plot_val), color = factor(!!rlang::sym(cols[1])), group = factor(!!rlang::sym(cols[1]))), linewidth = 1)
+      } else {
+        p <- p + ggplot2::geom_line(ggplot2::aes(y = !!rlang::sym(plot_val), group = 1), linewidth = 1)
+      }
+    }
+
+    p <- p + ggplot2::theme_minimal() +
+      ggplot2::labs(title = paste("Pivot Analysis:", tools::toTitleCase(agg), "of", plot_val),
+                    x = rows[1], y = plot_val, fill = if(!is.null(cols)) cols[1] else NULL, color = if(!is.null(cols)) cols[1] else NULL) +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1))
+
+    return(p)
+  }
+
+  # 5. Handle gt Table Formatting
+  if (format == "gt") {
+    if (!requireNamespace("gt", quietly = TRUE)) {
+      stop("The 'gt' package is required for this format. Please run install.packages('gt').")
+    }
+
+    gt_tbl <- wide_data |>
+      gt::gt(rowname_col = rows[1]) |>
+      gt::tab_header(
+        title = paste("Pivot Analysis:", tools::toTitleCase(agg), "of", values[1]),
+        subtitle = "Generated by statusluxR"
+      ) |>
+      gt::opt_align_table_header(align = "left") |>
+      gt::fmt_number(
+        columns = setdiff(names(wide_data), rows),
+        decimals = 2
+      ) |>
+      gt::tab_options(
+        heading.background.color = "#2c3e50",
+        heading.title.font.size = 16,
+        column_labels.font.weight = "bold",
+        table.border.top.color = "#2c3e50",
+        table.border.bottom.color = "#2c3e50"
+      )
+
+    return(gt_tbl)
+  }
+
+  # 6. Handle Exports
+  final_output <- if (format == "wide") wide_data else long_data
+
+  if (export_format == "csv") {
+    write.csv(final_output, paste0(file_name, ".csv"), row.names = FALSE)
+    message("Pivot table exported as CSV.")
+  } else if (export_format == "excel") {
+    if (requireNamespace("writexl", quietly = TRUE)) {
+      writexl::write_xlsx(final_output, paste0(file_name, ".xlsx"))
+      message("Pivot table exported as Excel file.")
+    } else {
+      warning("Package 'writexl' is required to export to Excel. Please install it.")
+    }
+  }
+
+  return(final_output)
+}

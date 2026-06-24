@@ -8,6 +8,7 @@ group_histogram(
   x,
   rule = "Sturges",
   width = NULL,
+  type = "exclusive",
   title = "Grouped Histogram",
   xlab = "Class Intervals",
   ylab = "Frequency",
@@ -21,6 +22,8 @@ group_histogram(
 \item{rule}{string: "Sturges", "Scott", "FD", or "Custom"}
 
 \item{width}{custom interval width (if rule="Custom")}
+
+\item{type}{string: "exclusive" or "inclusive"}
 
 \item{title}{custom plot title}
 

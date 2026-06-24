@@ -282,14 +282,24 @@ diagnostic_stats <- function(var1, var2 = NULL) {
 
 #' Generate a Professional Grouped Frequency Distribution Table
 #'
-#' @param data A data frame containing the dataset.
-#' @param num_var The numerical variable.
-#' @param cat_var The categorical variable.
-#' @param bins Integer. Number of bins.
-#' @param width Numeric. Exact class width.
+#' Creates a grouped frequency distribution table of a numerical variable
+#' stratified by a categorical variable.
 #'
-#' @return A list containing the clean data and the gt table.
-group_frequency_table <- function(data, num_var, cat_var, bins = 5, width = NULL) {
+#' @param data A data frame.
+#' @param num_var A numerical variable.
+#' @param cat_var A categorical variable.
+#' @param bins Number of classes.
+#' @param width Optional class width.
+#'
+#' @return A list containing:
+#' \itemize{
+#'   \item data: processed grouped data
+#'   \item table: a gt table
+#' }
+#'
+#' @export
+group_frequency_table <- function(data, num_var, cat_var,
+                                  bins = 5, width = NULL) {
 
   # 1. Capture variables and prepare data
   num_var_str <- rlang::as_name(rlang::enquo(num_var))
