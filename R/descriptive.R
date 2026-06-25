@@ -1,14 +1,23 @@
 #' Smart Helper: Ensure Grouped Data
 #'
 #' (Internal function, not exported)
-#' Checks if input is raw data or a table. Converts raw data to a table automatically.
+#' Validates if the input is a frequency table or raw data. If it is raw data,
+#' it builds the frequency table using the specified width and type choices.
 #'
-#' @param data The input numeric vector or frequency table to check.
+#' @param data A numeric vector or a pre-existing frequency data frame.
+#' @param width Class interval width (optional).
+#' @param type Grouping method: "exclusive" (default) or "inclusive".
 #' @return A validated frequency data frame.
-.ensure_grouped_df <- function(data) {
-  if (is.numeric(data)) {
-    # If raw data, convert using our previously built function
-    return(group_exclusive_freq(data))
+.ensure_grouped_df <- function(data, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+
+  if (is.numeric(data) && !is.data.frame(data)) {
+    # Dynamically build the table using the user's specific choices
+    if (type == "exclusive") {
+      return(group_exclusive_freq(data, width))
+    } else {
+      return(group_inclusive_freq(data, width))
+    }
   } else if (is.data.frame(data) && all(c("Lower", "Upper", "Midpoint", "Frequency", "Cumulative_Frequency") %in% names(data))) {
     return(data)
   } else {
@@ -18,26 +27,28 @@
 
 #' Grouped Mean
 #'
-#' Computes mean from grouped frequency distribution or raw data.
-#'
 #' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
 #' @return Numeric mean
 #' @export
-group_mean <- function(x) {
-  df <- .ensure_grouped_df(x)
+group_mean <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  df <- .ensure_grouped_df(x, width, type)
   sum(df$Midpoint * df$Frequency) / sum(df$Frequency)
 }
 
-#' Grouped Percentile (Helper for Median and Quartiles)
-#'
-#' Calculates any percentile for grouped data.
+#' Grouped Percentile
 #'
 #' @param x Numeric vector OR frequency table
 #' @param p Percentile to calculate (0 to 100)
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
 #' @return Numeric percentile value
 #' @export
-group_percentile <- function(x, p) {
-  df <- .ensure_grouped_df(x)
+group_percentile <- function(x, p, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  df <- .ensure_grouped_df(x, width, type)
   n <- sum(df$Frequency)
   target <- (p / 100) * n
 
@@ -53,24 +64,26 @@ group_percentile <- function(x, p) {
 
 #' Grouped Median
 #'
-#' Estimates median from grouped data.
-#'
 #' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
 #' @return numeric median
 #' @export
-group_median <- function(x) {
-  group_percentile(x, 50)
+group_median <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  group_percentile(x, 50, width, type)
 }
 
 #' Grouped Mode
 #'
-#' Estimates mode from grouped data.
-#'
 #' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
 #' @return numeric mode
 #' @export
-group_mode <- function(x) {
-  df <- .ensure_grouped_df(x)
+group_mode <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  df <- .ensure_grouped_df(x, width, type)
   i <- which.max(df$Frequency)
 
   L <- df$Lower[i]
@@ -79,7 +92,6 @@ group_mode <- function(x) {
   f2 <- ifelse(i == nrow(df), 0, df$Frequency[i + 1])
   h <- df$Upper[i] - df$Lower[i]
 
-  # Prevent division by zero if all frequencies are the same
   denominator <- (2 * f1 - f0 - f2)
   if (denominator == 0) return(df$Midpoint[i])
 
@@ -88,157 +100,84 @@ group_mode <- function(x) {
 
 #' Grouped Variance
 #'
-#' Computes sample variance from grouped data.
-#'
 #' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
 #' @return numeric variance
 #' @export
-group_variance <- function(x) {
-  df <- .ensure_grouped_df(x)
-  m <- group_mean(df)
+group_variance <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  df <- .ensure_grouped_df(x, width, type)
+  m <- group_mean(df, width, type)
   n <- sum(df$Frequency)
 
   if (n <= 1) stop("Not enough data to calculate variance.")
-
   sum(df$Frequency * (df$Midpoint - m)^2) / (n - 1)
 }
 
 #' Grouped Standard Deviation
 #'
-#' Computes standard deviation from grouped data.
-#'
 #' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
 #' @return numeric sd
 #' @export
-group_sd <- function(x) {
-  sqrt(group_variance(x))
+group_sd <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  sqrt(group_variance(x, width, type))
 }
 
 #' Grouped Coefficient of Variation
 #'
 #' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
 #' @return CV percentage
 #' @export
-group_cv <- function(x) {
-  (group_sd(x) / group_mean(x)) * 100
+group_cv <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  (group_sd(x, width, type) / group_mean(x, width, type)) * 100
 }
 
 #' Grouped Five Number Summary
 #'
-#' Calculates Min, Q1, Median, Q3, and Max for grouped data.
-#'
 #' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
 #' @return Named numeric vector
 #' @export
-group_five_number <- function(x) {
-  df <- .ensure_grouped_df(x)
-
-  # Filter out classes with zero frequency for accurate Min/Max
+group_five_number <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  df <- .ensure_grouped_df(x, width, type)
   active_df <- df[df$Frequency > 0, ]
 
   c(
     Min = min(active_df$Lower),
-    Q1 = group_percentile(df, 25),
-    Median = group_percentile(df, 50),
-    Q3 = group_percentile(df, 75),
+    Q1 = group_percentile(df, 25, width, type),
+    Median = group_percentile(df, 50, width, type),
+    Q3 = group_percentile(df, 75, width, type),
     Max = max(active_df$Upper)
   )
 }
 
-#' Grouped Outliers
+#' Grouped Outliers (Accurate Boxplot Rule)
 #'
-#' Detects outliers using mean ± 2SD rule based on midpoints.
+#' Detects outliers using the standard 1.5 * IQR Boxplot rule applied to
+#' midpoints, matching base R precision.
 #'
 #' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
 #' @return Vector of outlying midpoints
+#' @importFrom stats quantile
 #' @export
-group_outliers <- function(x) {
-  df <- .ensure_grouped_df(x)
-  m <- group_mean(df)
-  s <- group_sd(df)
+group_outliers <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  df <- .ensure_grouped_df(x, width, type)
 
-  # Return midpoints that fall outside 2 standard deviations
-  df$Midpoint[df$Midpoint < (m - 2*s) | df$Midpoint > (m + 2*s)]
-}
-
-#' Grouped Skewness
-#'
-#' @param x Numeric vector OR frequency table
-#' @return skewness
-#' @export
-group_skewness <- function(x) {
-  df <- .ensure_grouped_df(x)
-  m <- group_mean(df)
-  s <- group_sd(df)
-
-  sum(df$Frequency * ((df$Midpoint - m)/s)^3) / sum(df$Frequency)
-}
-
-#' Grouped Kurtosis
-#'
-#' @param x Numeric vector OR frequency table
-#' @return excess kurtosis
-#' @export
-group_kurtosis <- function(x) {
-  df <- .ensure_grouped_df(x)
-  m <- group_mean(df)
-  s <- group_sd(df)
-
-  # Excess kurtosis (subtracting 3)
-  sum(df$Frequency * ((df$Midpoint - m)/s)^4) / sum(df$Frequency) - 3
-}
-
-#' Comprehensive Grouped Description
-#'
-#' Generates all descriptive statistics for a dataset.
-#'
-#' @param x Numeric vector OR frequency table
-#' @param width Class interval width (optional, only used if x is raw data)
-#' @return A detailed list of descriptive statistics
-#' @export
-group_describe <- function(x, width = NULL) {
-  # Generate the table (using the exclusive freq function we built earlier)
-  if (is.numeric(x)) {
-    df <- group_exclusive_freq(x, width)
-  } else {
-    df <- .ensure_grouped_df(x)
-  }
-
-  list(
-    frequency_table = df,
-    mean = group_mean(df),
-    median = group_median(df),
-    mode = group_mode(df),
-    variance = group_variance(df),
-    sd = group_sd(df),
-    cv = group_cv(df),
-    five_number_summary = group_five_number(df),
-    skewness = group_skewness(df),
-    kurtosis = group_kurtosis(df),
-    outliers = group_outliers(df)
-  )
-}
-
-#' Remove Outliers from Grouped Frequency Table
-#'
-#' Removes classes from a frequency table that fall outside the 1.5 * IQR
-#' range based on class midpoints, then recalculates relative and cumulative frequencies.
-#'
-#' @param df A data frame generated by group_exclusive_freq or group_inclusive_freq
-#' @return A recalculated data frame with outlier classes removed
-#' @export
-remove_grouped_outliers <- function(df) {
-  if(!is.data.frame(df) || !all(c("Midpoint", "Frequency") %in% names(df))) {
-    stop("Input must be a frequency data frame with 'Midpoint' and 'Frequency' columns.")
-  }
-
-  # Reconstruct approximate raw data using midpoints to find IQR fences
   approx_raw <- rep(df$Midpoint, df$Frequency)
+  if (length(approx_raw) == 0) return(numeric(0))
 
-  # If table is empty or has no frequency, return as is
-  if(length(approx_raw) == 0) return(df)
-
-  # FIXED: Added stats:: back to avoid global variable notes
   Q1 <- stats::quantile(approx_raw, 0.25, names = FALSE)
   Q3 <- stats::quantile(approx_raw, 0.75, names = FALSE)
   IQR_val <- Q3 - Q1
@@ -246,19 +185,115 @@ remove_grouped_outliers <- function(df) {
   lower_fence <- Q1 - 1.5 * IQR_val
   upper_fence <- Q3 + 1.5 * IQR_val
 
-  # Filter out rows where the midpoint is an outlier
+  # Find midpoints that cross the IQR boundaries
+  outlying_midpoints <- df$Midpoint[df$Midpoint < lower_fence | df$Midpoint > upper_fence]
+  return(outlying_midpoints)
+}
+
+#' Grouped Skewness
+#'
+#' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
+#' @return skewness
+#' @export
+group_skewness <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  df <- .ensure_grouped_df(x, width, type)
+  m <- group_mean(df, width, type)
+  s <- group_sd(df, width, type)
+  sum(df$Frequency * ((df$Midpoint - m)/s)^3) / sum(df$Frequency)
+}
+
+#' Grouped Kurtosis
+#'
+#' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
+#' @return excess kurtosis
+#' @export
+group_kurtosis <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  df <- .ensure_grouped_df(x, width, type)
+  m <- group_mean(df, width, type)
+  s <- group_sd(df, width, type)
+  sum(df$Frequency * ((df$Midpoint - m)/s)^4) / sum(df$Frequency) - 3
+}
+
+#' Comprehensive Grouped Description
+#'
+#' @param x Numeric vector OR frequency table
+#' @param width Class interval width (optional)
+#' @param type Grouping method: "exclusive" or "inclusive"
+#' @return A detailed list of descriptive statistics
+#' @export
+group_describe <- function(x, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+  df <- .ensure_grouped_df(x, width, type)
+
+  list(
+    frequency_table = df,
+    mean = group_mean(df, width, type),
+    median = group_median(df, width, type),
+    mode = group_mode(df, width, type),
+    variance = group_variance(df, width, type),
+    sd = group_sd(df, width, type),
+    cv = group_cv(df, width, type),
+    five_number_summary = group_five_number(df, width, type),
+    skewness = group_skewness(df, width, type),
+    kurtosis = group_kurtosis(df, width, type),
+    outliers = group_outliers(df, width, type)
+  )
+}
+
+#' Remove Outliers from Grouped Frequency Table
+#'
+#' Safely handles raw data, summary lists, or frequency data frames by evaluating
+#' class midpoints against the 1.5 * IQR boxplot fence rules.
+#'
+#' @param df Raw numeric data vector, list output from group_describe, or frequency table.
+#' @param width Class interval width (optional, applied if raw numeric data is given).
+#' @param type Grouping method: "exclusive" or "inclusive" (applied if raw data is given).
+#' @return A recalculated frequency data frame with outlier classes removed.
+#' @importFrom stats quantile
+#' @export
+remove_grouped_outliers <- function(df, width = NULL, type = c("exclusive", "inclusive")) {
+  type <- match.arg(type)
+
+  # 1. Extract the frequency table if a group_describe list was provided
+  if (is.list(df) && "frequency_table" %in% names(df)) {
+    df <- df$frequency_table
+  } else if (is.numeric(df) && !is.data.frame(df)) {
+    # Dynamically build the table using the user's specific width and type choices
+    df <- .ensure_grouped_df(df, width, type)
+  }
+
+  # 2. Validation Check
+  if(!is.data.frame(df) || !all(c("Midpoint", "Frequency") %in% names(df))) {
+    stop("Input must be raw data, a frequency data frame, or the output from group_describe().")
+  }
+
+  # 3. Reconstruct approximate raw data points from midpoints to find IQR fences
+  approx_raw <- rep(df$Midpoint, df$Frequency)
+  if(length(approx_raw) == 0) return(df)
+
+  Q1 <- stats::quantile(approx_raw, 0.25, names = FALSE)
+  Q3 <- stats::quantile(approx_raw, 0.75, names = FALSE)
+  IQR_val <- Q3 - Q1
+
+  lower_fence <- Q1 - 1.5 * IQR_val
+  upper_fence <- Q3 + 1.5 * IQR_val
+
+  # 4. Drop rows where midpoints fall outside the fences
   filtered_df <- df[df$Midpoint >= lower_fence & df$Midpoint <= upper_fence, ]
 
-  # Drop empty factor levels if Class is a factor
   if(is.factor(filtered_df$Class)) {
     filtered_df$Class <- droplevels(filtered_df$Class)
   }
 
-  # Recalculate frequencies since total N has changed
+  # 5. Recalculate relative and cumulative frequencies safely for the remaining data
   filtered_df$Relative_Frequency <- filtered_df$Frequency / sum(filtered_df$Frequency)
   filtered_df$Cumulative_Frequency <- cumsum(filtered_df$Frequency)
-
-  # Reset row names for clean output
   rownames(filtered_df) <- NULL
 
   return(filtered_df)
@@ -266,30 +301,49 @@ remove_grouped_outliers <- function(df) {
 #' Data Cleansing and Diagnostic Summary
 #'
 #' Detects duplicates, removes them, and provides a missing value breakdown.
+#' Now fully supports both data frames and single variables/vectors.
 #'
-#' @param df target dataframe
-#' @return A list containing the diagnostic summary and the cleaned dataframe
+#' @param x Target data frame or numeric/character vector
+#' @return A list containing the diagnostic summary and the cleaned data
 #' @export
-data_diagnostics <- function(df) {
-  # 1. Duplicate Detection
+data_diagnostics <- function(x) {
+  # 1. Handle Single Vectors vs Data Frames intelligently
+  is_vector_input <- is.atomic(x) && !is.data.frame(x)
+
+  if (is_vector_input) {
+    # Convert vector to a 1-column dataframe temporarily for analysis
+    df <- data.frame(Variable = x, stringsAsFactors = FALSE)
+  } else {
+    df <- x
+  }
+
+  # 2. Duplicate Detection
   duplicate_rows <- sum(duplicated(df))
 
-  # 2. Missing Value Summary (Column by Column)
+  # 3. Missing Value Summary (Column by Column)
   missing_summary <- data.frame(
     Variable = names(df),
-    Missing_Count = sapply(df, function(x) sum(is.na(x))),
-    Missing_Percentage = sapply(df, function(x) round((sum(is.na(x)) / nrow(df)) * 100, 2))
+    Missing_Count = sapply(df, function(col) sum(is.na(col))),
+    Missing_Percentage = sapply(df, function(col) round((sum(is.na(col)) / nrow(df)) * 100, 2))
   )
   rownames(missing_summary) <- NULL
 
-  # 3. Clean the Data (Remove Exact Duplicates)
-  clean_df <- df[!duplicated(df), ]
+  # 4. Clean the Data (Remove Exact Duplicates safely)
+  clean_df <- df[!duplicated(df), , drop = FALSE]
+
+  # 5. Format output: if input was a vector, return a vector. If dataframe, return dataframe.
+  if (is_vector_input) {
+    clean_data <- clean_df[[1]]
+  } else {
+    clean_data <- clean_df
+  }
 
   list(
-    Total_Rows_Original = nrow(df),
-    Duplicates_Detected_And_Removed = duplicate_rows,
+    Total_Original_Records = nrow(df),
+    Duplicates_Removed = duplicate_rows,
+    Remaining_Unique_Records = nrow(clean_df),
     Missing_Values_Report = missing_summary,
-    Cleaned_Data = clean_df
+    Cleaned_Data = clean_data
   )
 }
 

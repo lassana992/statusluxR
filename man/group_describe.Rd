@@ -4,16 +4,18 @@
 \alias{group_describe}
 \title{Comprehensive Grouped Description}
 \usage{
-group_describe(x, width = NULL)
+group_describe(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
 
-\item{width}{Class interval width (optional, only used if x is raw data)}
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 A detailed list of descriptive statistics
 }
 \description{
-Generates all descriptive statistics for a dataset.
+Comprehensive Grouped Description
 }

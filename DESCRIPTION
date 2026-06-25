@@ -20,14 +20,20 @@ Depends: R (>= 4.1.0)
 LazyData: true
 Imports:
     dplyr,
+    forcats,
     ggplot2,
     glue,
     gt,
     gtsummary,
+    labelled,
+    naniar,
     rlang,
     rpivotTable,
+    scales,
     shiny,
     stats,
-    tidyr
+    stringr,
+    tidyr,
+    VIM
 Suggests: 
     writexl

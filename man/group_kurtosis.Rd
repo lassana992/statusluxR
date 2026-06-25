@@ -4,10 +4,14 @@
 \alias{group_kurtosis}
 \title{Grouped Kurtosis}
 \usage{
-group_kurtosis(x)
+group_kurtosis(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 excess kurtosis

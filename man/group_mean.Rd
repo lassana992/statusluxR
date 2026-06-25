@@ -4,14 +4,18 @@
 \alias{group_mean}
 \title{Grouped Mean}
 \usage{
-group_mean(x)
+group_mean(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 Numeric mean
 }
 \description{
-Computes mean from grouped frequency distribution or raw data.
+Grouped Mean
 }

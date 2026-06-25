@@ -2,16 +2,21 @@
 % Please edit documentation in R/descriptive.R
 \name{group_outliers}
 \alias{group_outliers}
-\title{Grouped Outliers}
+\title{Grouped Outliers (Accurate Boxplot Rule)}
 \usage{
-group_outliers(x)
+group_outliers(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 Vector of outlying midpoints
 }
 \description{
-Detects outliers using mean ± 2SD rule based on midpoints.
+Detects outliers using the standard 1.5 * IQR Boxplot rule applied to
+midpoints, matching base R precision.
 }

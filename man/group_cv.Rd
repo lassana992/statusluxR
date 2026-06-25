@@ -4,10 +4,14 @@
 \alias{group_cv}
 \title{Grouped Coefficient of Variation}
 \usage{
-group_cv(x)
+group_cv(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 CV percentage

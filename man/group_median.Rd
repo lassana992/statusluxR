@@ -4,14 +4,18 @@
 \alias{group_median}
 \title{Grouped Median}
 \usage{
-group_median(x)
+group_median(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 numeric median
 }
 \description{
-Estimates median from grouped data.
+Grouped Median
 }

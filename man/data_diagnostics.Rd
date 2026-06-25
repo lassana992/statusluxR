@@ -4,14 +4,15 @@
 \alias{data_diagnostics}
 \title{Data Cleansing and Diagnostic Summary}
 \usage{
-data_diagnostics(df)
+data_diagnostics(x)
 }
 \arguments{
-\item{df}{target dataframe}
+\item{x}{Target data frame or numeric/character vector}
 }
 \value{
-A list containing the diagnostic summary and the cleaned dataframe
+A list containing the diagnostic summary and the cleaned data
 }
 \description{
 Detects duplicates, removes them, and provides a missing value breakdown.
+Now fully supports both data frames and single variables/vectors.
 }

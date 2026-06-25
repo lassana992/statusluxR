@@ -4,14 +4,18 @@
 \alias{group_sd}
 \title{Grouped Standard Deviation}
 \usage{
-group_sd(x)
+group_sd(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 numeric sd
 }
 \description{
-Computes standard deviation from grouped data.
+Grouped Standard Deviation
 }

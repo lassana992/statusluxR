@@ -4,14 +4,18 @@
 \alias{group_five_number}
 \title{Grouped Five Number Summary}
 \usage{
-group_five_number(x)
+group_five_number(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 Named numeric vector
 }
 \description{
-Calculates Min, Q1, Median, Q3, and Max for grouped data.
+Grouped Five Number Summary
 }

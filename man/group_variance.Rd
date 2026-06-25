@@ -4,14 +4,18 @@
 \alias{group_variance}
 \title{Grouped Variance}
 \usage{
-group_variance(x)
+group_variance(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 numeric variance
 }
 \description{
-Computes sample variance from grouped data.
+Grouped Variance
 }

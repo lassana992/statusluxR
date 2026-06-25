@@ -4,15 +4,20 @@
 \alias{.ensure_grouped_df}
 \title{Smart Helper: Ensure Grouped Data}
 \usage{
-.ensure_grouped_df(data)
+.ensure_grouped_df(data, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
-\item{data}{The input numeric vector or frequency table to check.}
+\item{data}{A numeric vector or a pre-existing frequency data frame.}
+
+\item{width}{Class interval width (optional).}
+
+\item{type}{Grouping method: "exclusive" (default) or "inclusive".}
 }
 \value{
 A validated frequency data frame.
 }
 \description{
 (Internal function, not exported)
-Checks if input is raw data or a table. Converts raw data to a table automatically.
+Validates if the input is a frequency table or raw data. If it is raw data,
+it builds the frequency table using the specified width and type choices.
 }

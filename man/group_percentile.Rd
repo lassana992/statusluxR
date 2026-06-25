@@ -2,18 +2,22 @@
 % Please edit documentation in R/descriptive.R
 \name{group_percentile}
 \alias{group_percentile}
-\title{Grouped Percentile (Helper for Median and Quartiles)}
+\title{Grouped Percentile}
 \usage{
-group_percentile(x, p)
+group_percentile(x, p, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
 
 \item{p}{Percentile to calculate (0 to 100)}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 Numeric percentile value
 }
 \description{
-Calculates any percentile for grouped data.
+Grouped Percentile
 }

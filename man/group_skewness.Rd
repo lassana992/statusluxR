@@ -4,10 +4,14 @@
 \alias{group_skewness}
 \title{Grouped Skewness}
 \usage{
-group_skewness(x)
+group_skewness(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 skewness

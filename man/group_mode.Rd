@@ -4,14 +4,18 @@
 \alias{group_mode}
 \title{Grouped Mode}
 \usage{
-group_mode(x)
+group_mode(x, width = NULL, type = c("exclusive", "inclusive"))
 }
 \arguments{
 \item{x}{Numeric vector OR frequency table}
+
+\item{width}{Class interval width (optional)}
+
+\item{type}{Grouping method: "exclusive" or "inclusive"}
 }
 \value{
 numeric mode
 }
 \description{
-Estimates mode from grouped data.
+Grouped Mode
 }
