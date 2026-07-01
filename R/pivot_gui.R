@@ -10,11 +10,13 @@
 #' @param aggregator Character. Default math operation (e.g., "Average", "Sum").
 #' @return A Shiny application object.
 #' @export
-#' @import shiny rpivotTable ggplot2
+#' @import shiny
+#' @import ggplot2
 pivot_gui <- function(data, rows = NULL, cols = NULL, vals = NULL, aggregator = "Average") {
 
+  # --- GATEKEEPER CHECK ---
   if (!requireNamespace("rpivotTable", quietly = TRUE)) {
-    stop("The 'rpivotTable' package is required.")
+    stop("The 'rpivotTable' package is required to use this interactive GUI. Please install it using: install.packages('rpivotTable')", call. = FALSE)
   }
 
   # FORCE strict data.frame conversion

@@ -105,10 +105,10 @@ pivot_engine <- function(data,
     return(p)
   }
 
-  # 5. Handle gt Table Formatting
+  # 5. Handle gt Table Formatting (With Safe Gatekeeper Check)
   if (format == "gt") {
     if (!requireNamespace("gt", quietly = TRUE)) {
-      stop("The 'gt' package is required for this format. Please run install.packages('gt').")
+      stop("The 'gt' package is required for this format. Please install it using: install.packages('gt')", call. = FALSE)
     }
 
     gt_tbl <- wide_data |>
@@ -140,12 +140,11 @@ pivot_engine <- function(data,
     write.csv(final_output, paste0(file_name, ".csv"), row.names = FALSE)
     message("Pivot table exported as CSV.")
   } else if (export_format == "excel") {
-    if (requireNamespace("writexl", quietly = TRUE)) {
-      writexl::write_xlsx(final_output, paste0(file_name, ".xlsx"))
-      message("Pivot table exported as Excel file.")
-    } else {
-      warning("Package 'writexl' is required to export to Excel. Please install it.")
+    if (!requireNamespace("writexl", quietly = TRUE)) {
+      stop("The 'writexl' package is required to export to Excel. Please install it using: install.packages('writexl')", call. = FALSE)
     }
+    writexl::write_xlsx(final_output, paste0(file_name, ".xlsx"))
+    message("Pivot table exported as Excel file.")
   }
 
   return(final_output)

@@ -23,17 +23,17 @@ Imports:
     forcats,
     ggplot2,
     glue,
-    gt,
     gtsummary,
     labelled,
     naniar,
     rlang,
-    rpivotTable,
     scales,
     shiny,
     stats,
+    gt,
     stringr,
     tidyr,
     VIM
-Suggests: 
+Suggests:
+    rpivotTable,
     writexl
